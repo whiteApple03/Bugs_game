@@ -17,11 +17,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.example.myapplication.data.AppDatabase
+import com.example.myapplication.data.Player
+import com.example.myapplication.data.Score
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.atan2
@@ -46,7 +50,7 @@ enum class BugType(val imageRes: Int, val points: Int) {
 }
 
 @Composable
-fun GameTab(settingsState: SettingsState) {
+fun GameTab(settingsState: SettingsState, player: Player) {
     var score by remember { mutableStateOf(0) }
     var timeLeft by remember { mutableStateOf(settingsState.roundDuration.toInt()) }
     var bugs by remember { mutableStateOf<List<Bug>>(emptyList()) }
@@ -54,6 +58,8 @@ fun GameTab(settingsState: SettingsState) {
     var nextBugId by remember { mutableStateOf(0) }
     var containerSize by remember { mutableStateOf<IntSize?>(null) }
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val db = AppDatabase.getDatabase(context)
 
     LaunchedEffect(gameActive) {
         if (gameActive) {
@@ -61,7 +67,11 @@ fun GameTab(settingsState: SettingsState) {
                 delay(1000)
                 timeLeft--
             }
-            gameActive = false // Game over
+            gameActive = false
+
+            coroutineScope.launch {
+                db.playerDao().insertScore(Score(playerId = player.id, score = score, difficulty = player.difficulty))
+            }
         }
     }
 

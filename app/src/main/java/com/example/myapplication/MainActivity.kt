@@ -20,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.example.myapplication.data.Player
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
 class MainActivity : ComponentActivity() {
@@ -42,10 +43,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainTabs() {
     var selectedTab by remember { mutableStateOf(0) }
-    val tabTitles = listOf( "Игра", "Регистрация", "Правила", "Авторы", "Настройки")
+    val tabTitles = listOf("Игра", "Регистрация", "Рекорды", "Правила", "Авторы", "Настройки")
 
     var registrationState by remember { mutableStateOf(RegistrationState()) }
     var settingsState by remember { mutableStateOf(SettingsState()) }
+    var selectedPlayer by remember { mutableStateOf<Player?>(null) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -71,14 +73,21 @@ fun MainTabs() {
 
             Box(modifier = Modifier.fillMaxSize()) {
                 when (selectedTab) {
-                    0 -> GameTab(settingsState = settingsState)
+                    0 -> {
+                        if (selectedPlayer == null) {
+                            PlayerSelection(onPlayerSelected = { selectedPlayer = it })
+                        } else {
+                            GameTab(settingsState = settingsState, player = selectedPlayer!!)
+                        }
+                    }
                     1 -> RegistrationTab(
                         state = registrationState,
                         onStateChange = { registrationState = it }
                     )
-                    2 -> RulesTab()
-                    3 -> AuthorsTab()
-                    4 -> SettingsTab(
+                    2 -> RecordsTab()
+                    3 -> RulesTab()
+                    4 -> AuthorsTab()
+                    5 -> SettingsTab(
                         state = settingsState,
                         onStateChange = { settingsState = it }
                     )

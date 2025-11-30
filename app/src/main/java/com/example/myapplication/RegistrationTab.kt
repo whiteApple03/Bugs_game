@@ -9,17 +9,20 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter // Added import
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.example.myapplication.data.AppDatabase
+import com.example.myapplication.data.Player
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import java.util.Calendar // Ensure Calendar is imported
-import java.util.Date // Might be needed for System.currentTimeMillis() if not already covered
+import java.util.Calendar
+import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,6 +33,8 @@ fun RegistrationTab(
     val initialCalendar = Calendar.getInstance().apply { timeInMillis = state.birthDate }
     val zodiac = getZodiacSign(initialCalendar)
     val context = LocalContext.current
+    val db = AppDatabase.getDatabase(context)
+    val scope = rememberCoroutineScope()
 
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState(
@@ -178,9 +183,12 @@ fun RegistrationTab(
                         course = state.course,
                         difficulty = state.difficulty.toInt(),
                         birthDate = state.birthDate,
-                        zodiac = zodiac
+                        zodiac = zodiac.displayName
                     )
-                    Toast.makeText(context, "Игрок ${player.fio} зарегистрирован", Toast.LENGTH_LONG).show()
+                    scope.launch {
+                        db.playerDao().insertPlayer(player)
+                        Toast.makeText(context, "Игрок ${player.fio} зарегистрирован", Toast.LENGTH_LONG).show()
+                    }
 
                 } else {
                     Toast.makeText(context, "Пожалуйста, заполните ФИО", Toast.LENGTH_SHORT).show()
